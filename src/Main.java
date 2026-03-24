@@ -1,8 +1,7 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
- * Abstract Room class (same as Use Case 2)
+ * Abstract Room class
  */
 abstract class Room {
     private String roomType;
@@ -30,7 +29,7 @@ abstract class Room {
     public abstract void displayDetails();
 }
 
-// Concrete classes
+// Concrete Room Classes
 class SingleRoom extends Room {
     public SingleRoom() {
         super("Single Room", 1, 2000);
@@ -62,39 +61,43 @@ class SuiteRoom extends Room {
 }
 
 /**
- * RoomInventory class - centralized inventory using HashMap
+ * Centralized Inventory (same as UC3)
  */
 class RoomInventory {
-
     private Map<String, Integer> inventory;
 
-    // Constructor initializes inventory
     public RoomInventory() {
         inventory = new HashMap<>();
-
-        // Initialize availability
         inventory.put("Single Room", 5);
-        inventory.put("Double Room", 3);
+        inventory.put("Double Room", 0); // intentionally 0 to test filtering
         inventory.put("Suite Room", 2);
     }
 
-    // Get availability
     public int getAvailability(String roomType) {
         return inventory.getOrDefault(roomType, 0);
     }
 
-    // Update availability (controlled)
-    public void updateAvailability(String roomType, int count) {
-        if (inventory.containsKey(roomType)) {
-            inventory.put(roomType, count);
-        }
-    }
+    // No update method used here → READ-ONLY scenario
+}
 
-    // Display full inventory
-    public void displayInventory() {
-        System.out.println("===== Current Inventory =====");
-        for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
-            System.out.println(entry.getKey() + " Available: " + entry.getValue());
+/**
+ * Search Service (Read-only)
+ */
+class SearchService {
+
+    public void searchAvailableRooms(List<Room> rooms, RoomInventory inventory) {
+
+        System.out.println("===== Available Rooms =====");
+
+        for (Room room : rooms) {
+            int available = inventory.getAvailability(room.getRoomType());
+
+            // Filter unavailable rooms
+            if (available > 0) {
+                room.displayDetails();
+                System.out.println("Available: " + available);
+                System.out.println("----------------------");
+            }
         }
     }
 }
@@ -107,36 +110,20 @@ public class Main {
     public static void main(String[] args) {
 
         // Create room objects
-        Room single = new SingleRoom();
-        Room doubleRoom = new DoubleRoom();
-        Room suite = new SuiteRoom();
+        List<Room> rooms = new ArrayList<>();
+        rooms.add(new SingleRoom());
+        rooms.add(new DoubleRoom());
+        rooms.add(new SuiteRoom());
 
-        // Initialize centralized inventory
+        // Inventory (centralized state)
         RoomInventory inventory = new RoomInventory();
 
-        System.out.println("===== Room Details =====");
+        // Search Service (read-only)
+        SearchService searchService = new SearchService();
 
-        single.displayDetails();
-        System.out.println("Available: " + inventory.getAvailability(single.getRoomType()));
-        System.out.println("----------------------");
+        // Perform search
+        searchService.searchAvailableRooms(rooms, inventory);
 
-        doubleRoom.displayDetails();
-        System.out.println("Available: " + inventory.getAvailability(doubleRoom.getRoomType()));
-        System.out.println("----------------------");
-
-        suite.displayDetails();
-        System.out.println("Available: " + inventory.getAvailability(suite.getRoomType()));
-        System.out.println("----------------------");
-
-        // Show full inventory
-        inventory.displayInventory();
-
-        // Example update
-        System.out.println("\nUpdating Single Room availability to 4...\n");
-        inventory.updateAvailability("Single Room", 4);
-
-        inventory.displayInventory();
-
-        System.out.println("===== End =====");
+        System.out.println("===== End (No State Changed) =====");
     }
 }
